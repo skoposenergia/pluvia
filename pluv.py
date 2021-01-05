@@ -8,7 +8,7 @@ from os import unlink
 def extrai(zipf):
     with ZipFile(zipf) as zp:
         zp.extractall("entradas/")
-    # unlink(zipf)
+    unlink(zipf)
 
 
 def at_bd(prevs):
@@ -82,8 +82,8 @@ def main():
                 df = trata_ena(zipf, csv)
 
             df.to_csv("saídas/ena.csv", ";")
-            # print("Adicionando %s ao banco de dados" % csv.stem)
-            # at_bd(prevs)
+            print("Adicionando %s ao banco de dados" % csv.stem)
+            at_bd(prevs)
 
 
 main()

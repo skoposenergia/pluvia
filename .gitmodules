@@ -1,0 +1,3 @@
+[submodule "gpluv"]
+	path = gpluv
+	url = https://github.com/mazucanti/gpluv.git
