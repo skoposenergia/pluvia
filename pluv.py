@@ -3,6 +3,7 @@ import psycopg2
 from pathlib import Path
 from zipfile import ZipFile
 from os import unlink
+from gpluv import gpl
 
 
 def extrai(zipf):
