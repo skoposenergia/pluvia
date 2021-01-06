@@ -3,6 +3,7 @@ import psycopg2
 from pathlib import Path
 from zipfile import ZipFile
 from os import unlink
+from datetime import  date
 from gpluv import gpl
 
 
@@ -18,15 +19,21 @@ def at_bd(prevs):
     cur = con.cursor()
 
     with open("saídas/ena.csv", "r") as fp:
-        if prevs:
-            header = fp.readline()
-            cur.copy_from(fp, 'pluvia_enaprevs', ";")
+        try:
+            if prevs:
+                header = fp.readline()
+                cur.copy_from(fp, 'pluvia_enaprevs', ";")
+            else:
+                header = fp.readline()
+                cur.copy_from(fp, 'pluvia_ena', ";")
+        except:
+            print("Não foi possível adicionar esse arquivo ao banco de dados")
         else:
-            header = fp.readline()
-            cur.copy_from(fp, 'pluvia_ena', ";")
+            con.commit()
+        finally:
+            con.close()
 
-    con.commit()
-    con.close()
+
 
 
 def trata_enaprevs(zipf, loc_csv):
@@ -40,8 +47,7 @@ def trata_enaprevs(zipf, loc_csv):
     df["ENA_MWmes"] = df["ENA_MWmes"].str.replace(",", ".")
     df["ENA_MWmes"] = df["ENA_MWmes"].astype(float)
 
-    df["zip"] = zipf.stem.replace("-ENA", "")
-    df["csv"] = loc_csv.stem
+    set_keys(df, loc_csv)
 
     df = df.fillna(9)
     df["Semana"] = df["Semana"].astype(int)
@@ -58,13 +64,24 @@ def trata_ena(zipf, loc_csv):
     df["ENA_Percentual_MLT"] = df["ENA_Percentual_MLT"].astype(float)
     df["ENA_MWmes"] = df["ENA_MWmes"].str.replace(",", ".")
     df["ENA_MWmes"] = df["ENA_MWmes"].astype(float)
-    df["zip"] = zipf.stem.replace("-ENA", "")
-    df["csv"] = loc_csv.stem
+
+    set_keys(df, loc_csv)
 
     df = df.fillna("1979-01-01")
 
     return df
 
+
+def set_keys(df, loc_csv):
+    df["zip"] = date.today().strftime("%Y-%m-%d")
+    df["csv"] = loc_csv.stem
+
+
+def cleanup():
+    arquivos = [arquivo for arquivo in Path("entradas").glob("**/*") if arquivo.is_file()]
+    for arquivo in arquivos:
+        print("Removendo %s" % arquivo.name)
+        unlink(arquivo)
 
 def main():
     locs = Path("entradas/").glob("**/*")
@@ -85,6 +102,10 @@ def main():
             df.to_csv("saídas/ena.csv", ";")
             print("Adicionando %s ao banco de dados" % csv.stem)
             at_bd(prevs)
+
+    print("Limpando arquivos de entrada")
+    cleanup()
+    print("Concluído")
 
 
 main()
