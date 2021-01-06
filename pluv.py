@@ -9,7 +9,9 @@ from gpluv import gpl
 
 def extrai(zipf):
     with ZipFile(zipf) as zp:
+        print("Extraindo %s" % zipf.name)
         zp.extractall("entradas/")
+    print("Removendo zip")
     unlink(zipf)
 
 
